@@ -53,7 +53,7 @@ router.post('/tools', async (req, res) => {
   try {
     const {
       name, slug, url, icon, category, badge, short_desc, long_desc,
-      features, tags, is_hidden, is_upcoming, launch_date
+      features, tags, is_hidden, is_upcoming, launch_date, suggested_by
     } = req.body;
 
     if (!name || !slug || !url || !short_desc) {
@@ -71,12 +71,12 @@ router.post('/tools', async (req, res) => {
     const tagsJson = typeof tags === 'string' ? tags : JSON.stringify(tags || []);
 
     const result = await db.run(
-      `INSERT INTO tools (name, slug, url, icon, category, badge, short_desc, long_desc, features, tags, is_hidden, is_upcoming, launch_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO tools (name, slug, url, icon, category, badge, short_desc, long_desc, features, tags, is_hidden, is_upcoming, launch_date, suggested_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        name, cleanSlug, url, icon || '🔧', category || 'developer', badge || 'Active',
+        name, cleanSlug, url, icon || 'code', category || 'developer', badge || 'Active',
         short_desc, long_desc || '', featuresJson, tagsJson,
-        is_hidden ? 1 : 0, is_upcoming ? 1 : 0, launch_date || null
+        is_hidden ? 1 : 0, is_upcoming ? 1 : 0, launch_date || null, suggested_by || null
       ]
     );
 
@@ -91,7 +91,7 @@ router.put('/tools/:id', async (req, res) => {
   try {
     const {
       name, slug, url, icon, category, badge, short_desc, long_desc,
-      features, tags, is_hidden, is_upcoming, launch_date
+      features, tags, is_hidden, is_upcoming, launch_date, suggested_by
     } = req.body;
 
     const featuresJson = typeof features === 'string' ? features : JSON.stringify(features || []);
@@ -101,12 +101,12 @@ router.put('/tools/:id', async (req, res) => {
       `UPDATE tools
        SET name = ?, slug = ?, url = ?, icon = ?, category = ?, badge = ?, short_desc = ?,
            long_desc = ?, features = ?, tags = ?, is_hidden = ?, is_upcoming = ?, launch_date = ?,
-           updated_at = CURRENT_TIMESTAMP
+           suggested_by = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       [
-        name, slug, url, icon, category, badge, short_desc, long_desc || '',
+        name, slug, url, icon || 'code', category || 'developer', badge || 'Active', short_desc, long_desc || '',
         featuresJson, tagsJson, is_hidden ? 1 : 0, is_upcoming ? 1 : 0, launch_date || null,
-        req.params.id
+        suggested_by || null, req.params.id
       ]
     );
 
@@ -252,6 +252,51 @@ router.get('/subscribers', async (req, res) => {
   try {
     const subscribers = await db.all('SELECT * FROM launch_subscribers ORDER BY created_at DESC');
     res.json({ subscribers });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ================= USERS MANAGEMENT =================
+// GET /api/admin/users — List registered users
+router.get('/users', async (req, res) => {
+  try {
+    const users = await db.all('SELECT id, email, name, role, notify_new_tools, created_at FROM users ORDER BY id ASC');
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/admin/users/:id/role — Change a user's role (admin / user)
+router.patch('/users/:id/role', async (req, res) => {
+  try {
+    const { role } = req.body;
+    const targetId = req.params.id;
+
+    if (!role || !['admin', 'user'].includes(role)) {
+      return res.status(400).json({ error: 'Valid role ("admin" or "user") is required.' });
+    }
+
+    const targetUser = await db.one('SELECT id, email, role FROM users WHERE id = ?', [targetId]);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Safety check: Prevent demoting the last remaining admin
+    if (targetUser.role === 'admin' && role === 'user') {
+      const adminCount = await db.one("SELECT COUNT(*) as cnt FROM users WHERE role = 'admin'");
+      if (Number(adminCount?.cnt || 0) <= 1) {
+        return res.status(400).json({ error: 'Cannot demote the only remaining administrator.' });
+      }
+    }
+
+    await db.run('UPDATE users SET role = ? WHERE id = ?', [role, targetId]);
+    res.json({
+      success: true,
+      message: `User ${targetUser.email} role updated to ${role}.`,
+      role
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

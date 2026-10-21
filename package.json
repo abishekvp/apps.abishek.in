@@ -4,14 +4,24 @@
   "description": "Showcase Directory and Central Hub for all abishek.in tools and applications with user login, bug reporting, tool requests, notification management, and admin portal.",
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "dev:server": "node --watch server/index.js",
+    "build": "vite build",
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js",
+    "preview": "vite preview",
     "set-admin": "node server/scripts/set-admin.js"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
-    "pg": "^8.16.0"
+    "lucide-react": "^1.16.0",
+    "pg": "^8.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.2.0"
   }
 }

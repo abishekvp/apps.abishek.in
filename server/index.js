@@ -1,6 +1,7 @@
 /**
  * Apps & Tools Directory Server — apps.abishek.in & tools.abishek.in
  */
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -74,14 +75,31 @@ export async function createApp() {
     res.status(500).send('Internal server error');
   });
 
-  // Static Assets from public/
+  // Static Assets: Prefer built React production app in dist/, fallback to public/
+  const distDir = path.resolve(__dirname, '../dist');
   const publicDir = path.resolve(__dirname, '../public');
-  app.use(express.static(publicDir));
+  const staticDir = fs.existsSync(distDir) ? distDir : publicDir;
+  app.use(express.static(staticDir));
+  if (staticDir !== publicDir) {
+    app.use(express.static(publicDir));
+  }
 
-  // SPA Fallback: Send public/index.html for any unhandled GET route that doesn't start with /api
+  // Admin Portal Route: Dedicated separate administration page
+  app.get(['/admin', '/admin.html'], (req, res) => {
+    const adminPath = path.join(publicDir, 'admin.html');
+    if (fs.existsSync(adminPath)) {
+      return res.sendFile(adminPath);
+    }
+    res.status(404).send('Admin page not found');
+  });
+
+  // SPA Fallback: Send index.html for any unhandled GET route that doesn't start with /api
   app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api')) {
-      return res.sendFile(path.join(publicDir, 'index.html'));
+      const indexPath = fs.existsSync(path.join(distDir, 'index.html'))
+        ? path.join(distDir, 'index.html')
+        : path.join(publicDir, 'index.html');
+      return res.sendFile(indexPath);
     }
     next();
   });

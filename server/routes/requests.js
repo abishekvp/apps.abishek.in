@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const requests = await db.all(
-      'SELECT id, title, description, use_cases, votes_count, status, created_at FROM tool_requests ORDER BY votes_count DESC, created_at DESC LIMIT 50'
+      'SELECT id, name, email, title, description, use_cases, votes_count, status, created_at FROM tool_requests ORDER BY votes_count DESC, created_at DESC LIMIT 50'
     );
     res.json({ requests });
   } catch (err) {
