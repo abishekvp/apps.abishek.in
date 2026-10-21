@@ -1,12 +1,74 @@
 /**
  * Abishek Apps & Tools Hub — Frontend Client Application
- * Handles Catalog, Context Search, Public Submissions, Auth & Admin Portal
+ * Clean & Professional UX, Stable Colors, Spacious Responsive Layout
  */
 
-// ================= DOM & GLOBAL STATE =================
+// ================= GLOBAL STATE & TOAST SYSTEM =================
 let allTools = [];
 let currentUser = null;
 let currentCategory = 'all';
+
+// Toast Notification Manager
+window.showToast = function (message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  let iconSvg = 'ℹ';
+  if (type === 'success') iconSvg = '✓';
+  if (type === 'error') iconSvg = '✕';
+
+  toast.innerHTML = `
+    <span class="toast-icon">${iconSvg}</span>
+    <span class="toast-message">${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  // Trigger smooth slide-in
+  requestAnimationFrame(() => {
+    toast.classList.add('toast-show');
+  });
+
+  // Auto-dismiss after 3.5s
+  setTimeout(() => {
+    toast.classList.remove('toast-show');
+    setTimeout(() => {
+      toast.remove();
+    }, 250);
+  }, 3500);
+};
+
+// Safe API response parser to prevent "Unexpected token 'A', ... is not valid JSON" errors
+async function parseApiResponse(res) {
+  const contentType = res.headers.get('content-type') || '';
+  let data = null;
+
+  if (contentType.includes('application/json')) {
+    try {
+      data = await res.json();
+    } catch (e) {
+      // JSON parsing failed, fallback below
+    }
+  }
+
+  if (!data) {
+    const text = (await res.text()).trim();
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      data = { error: text || `HTTP ${res.status}: ${res.statusText}` };
+    }
+  }
+
+  if (!res.ok) {
+    throw new Error(data?.error || data?.message || `Request failed with status ${res.status}`);
+  }
+
+  return data;
+}
 
 // Theme Toggle
 const themeToggle = document.getElementById('themeToggle');
@@ -22,10 +84,12 @@ themeToggle?.addEventListener('click', () => {
     document.body.classList.remove('dark-theme');
     document.body.classList.add('light-theme');
     localStorage.setItem('hub_theme', 'light');
+    showToast('Switched to Light Theme', 'info');
   } else {
     document.body.classList.remove('light-theme');
     document.body.classList.add('dark-theme');
     localStorage.setItem('hub_theme', 'dark');
+    showToast('Switched to Dark Theme', 'info');
   }
 });
 
@@ -38,19 +102,28 @@ if (subdomainPill) {
   } else if (host.includes('apps.')) {
     subdomainPill.textContent = 'apps.abishek.in · Applications Directory';
   } else {
-    subdomainPill.textContent = 'apps.abishek.in & tools.abishek.in (Local)';
+    subdomainPill.textContent = 'apps.abishek.in · tools.abishek.in';
   }
 }
 
 // ================= MODAL HELPERS =================
 window.openModal = function (id) {
   const modal = document.getElementById(id);
-  if (modal) modal.classList.add('show');
+  if (modal) {
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    // Focus first input if available
+    const firstInput = modal.querySelector('input:not([type="hidden"]), textarea, select');
+    if (firstInput) setTimeout(() => firstInput.focus(), 50);
+  }
 };
 
 window.closeModal = function (id) {
   const modal = document.getElementById(id);
-  if (modal) modal.classList.remove('show');
+  if (modal) {
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
 };
 
 // Close modals when clicking backdrop
@@ -58,8 +131,32 @@ document.querySelectorAll('.modal-overlay').forEach(modal => {
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       modal.classList.remove('show');
+      document.body.style.overflow = '';
     }
   });
+});
+
+// Global Keyboard Shortcuts (Escape to close modals, Ctrl+K / Cmd+K to search)
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.show').forEach(m => {
+      m.classList.remove('show');
+    });
+    document.body.style.overflow = '';
+  }
+
+  // Ctrl+K or Cmd+K or '/' to focus search bar
+  const isK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
+  const isSlash = e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+  if (isK || isSlash) {
+    e.preventDefault();
+    const searchInput = document.getElementById('toolSearchInput');
+    if (searchInput) {
+      searchInput.focus();
+      searchInput.select();
+      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
 });
 
 window.openRequestModal = () => openModal('modalRequest');
@@ -72,6 +169,16 @@ document.getElementById('btnOpenBugModal')?.addEventListener('click', openBugMod
 document.getElementById('btnOpenContactModal')?.addEventListener('click', openContactModal);
 document.getElementById('btnOpenAuthModal')?.addEventListener('click', openAuthModal);
 
+// Copy URL to Clipboard helper
+window.copyToolUrl = function (url, e) {
+  if (e) e.stopPropagation();
+  navigator.clipboard.writeText(url).then(() => {
+    showToast(`Copied ${url} to clipboard!`, 'success');
+  }).catch(() => {
+    showToast('Failed to copy link', 'error');
+  });
+};
+
 // ================= LOAD TOOLS & CATALOG =================
 const toolsGrid = document.getElementById('toolsGrid');
 const upcomingGrid = document.getElementById('upcomingGrid');
@@ -79,35 +186,41 @@ const toolSearchInput = document.getElementById('toolSearchInput');
 const btnSearchClear = document.getElementById('btnSearchClear');
 const sortSelect = document.getElementById('sortSelect');
 const bugToolSelect = document.getElementById('bugToolSelect');
+const catalogResultsCount = document.getElementById('catalogResultsCount');
 
 async function fetchTools() {
   try {
     const res = await fetch('/api/tools');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     allTools = data.tools || [];
     renderCatalog();
     renderUpcomingRoadmap();
     populateBugToolDropdown();
     updateCategoryCounters();
   } catch (err) {
-    toolsGrid.innerHTML = `<div class="grid-loading" style="color:var(--danger)">Failed to load tools: ${err.message}</div>`;
+    toolsGrid.innerHTML = `<div class="grid-loading" style="color:var(--danger-text)">Failed to load tools: ${err.message}</div>`;
   }
 }
 
 function updateCategoryCounters() {
-  const liveTools = allTools.filter(t => !t.is_upcoming);
   const upcomingTools = allTools.filter(t => t.is_upcoming);
 
-  document.getElementById('countAll').textContent = allTools.length;
-  document.getElementById('countDev').textContent = allTools.filter(t => t.category === 'developer').length;
-  document.getElementById('countFormatters').textContent = allTools.filter(t => t.category === 'formatters').length;
-  document.getElementById('countMedia').textContent = allTools.filter(t => t.category === 'media').length;
-  document.getElementById('countUpcoming').textContent = upcomingTools.length;
+  const countAll = document.getElementById('countAll');
+  const countDev = document.getElementById('countDev');
+  const countFormatters = document.getElementById('countFormatters');
+  const countMedia = document.getElementById('countMedia');
+  const countUpcoming = document.getElementById('countUpcoming');
+
+  if (countAll) countAll.textContent = allTools.length;
+  if (countDev) countDev.textContent = allTools.filter(t => t.category === 'developer').length;
+  if (countFormatters) countFormatters.textContent = allTools.filter(t => t.category === 'formatters').length;
+  if (countMedia) countMedia.textContent = allTools.filter(t => t.category === 'media').length;
+  if (countUpcoming) countUpcoming.textContent = upcomingTools.length;
 }
 
 function populateBugToolDropdown() {
   if (!bugToolSelect) return;
-  bugToolSelect.innerHTML = '<option value="">-- Select Tool --</option>';
+  bugToolSelect.innerHTML = '<option value="">-- Select Affected Tool --</option>';
   allTools.forEach(tool => {
     const opt = document.createElement('option');
     opt.value = tool.slug;
@@ -143,7 +256,7 @@ function renderCatalog() {
 
   // Sort
   if (sort === 'popular') {
-    filtered.sort((a, b) => b.likes_count - a.likes_count);
+    filtered.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
   } else if (sort === 'name') {
     filtered.sort((a, b) => a.name.localeCompare(b.name));
   } else {
@@ -151,13 +264,25 @@ function renderCatalog() {
     filtered.sort((a, b) => (a.display_order || 99) - (b.display_order || 99));
   }
 
+  // Update counter
+  if (catalogResultsCount) {
+    if (query) {
+      catalogResultsCount.textContent = `Found ${filtered.length} matching "${query}"`;
+    } else {
+      catalogResultsCount.textContent = `${filtered.length} ${filtered.length === 1 ? 'tool' : 'tools'} available`;
+    }
+  }
+
   toolsGrid.innerHTML = '';
 
   if (filtered.length === 0) {
     toolsGrid.innerHTML = `
       <div class="grid-loading">
-        <p style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">No tools matching "${query}"</p>
-        <p>Can't find what you need? <a href="javascript:void(0)" onclick="openRequestModal()" style="color:var(--accent-blue)">Request this tool now ➜</a></p>
+        <p style="font-size:17px; font-weight:700; color:var(--text-primary); margin-bottom:8px;">No tools matching "${query}"</p>
+        <p style="font-size:14px; color:var(--text-secondary); margin-bottom:18px;">Can't find what you need? We build requested tools quickly.</p>
+        <button class="btn btn-primary btn-sm" onclick="openRequestModal()">
+          <span>+ Request This Tool</span>
+        </button>
       </div>`;
     return;
   }
@@ -167,19 +292,28 @@ function renderCatalog() {
     card.className = 'tool-card';
 
     const isUpcoming = tool.is_upcoming;
-    const badgeClass = isUpcoming ? 'badge-upcoming' : (tool.badge === 'Beta' ? 'badge-beta' : 'badge-live');
+    let badgeClass = 'badge-live';
+    if (isUpcoming) badgeClass = 'badge-upcoming';
+    else if (tool.badge === 'Beta') badgeClass = 'badge-beta';
+    else if (tool.badge === 'New') badgeClass = 'badge-new';
 
+    const cleanDisplayUrl = tool.url.replace(/^https?:\/\//, '');
     const featurePills = (tool.features || []).slice(0, 4).map(f => `<span class="feature-pill">${f}</span>`).join('');
 
     card.innerHTML = `
       <div class="tool-card-header">
-        <div class="tool-icon-box">${tool.icon}</div>
-        <div class="tool-badges">
-          <span class="tool-badge ${badgeClass}">${tool.badge}</span>
+        <div class="tool-icon-box">${tool.icon || '⚡'}</div>
+        <div class="tool-meta-block">
+          <div class="tool-title-row">
+            <h3 class="tool-title" title="${tool.name}">${tool.name}</h3>
+            <span class="tool-badge ${badgeClass}">${tool.badge || 'Live'}</span>
+          </div>
+          <div class="tool-url-sub" onclick="copyToolUrl('${tool.url}', event)" title="Click to copy link">
+            <span>${cleanDisplayUrl}</span>
+            <button class="copy-mini-btn" title="Copy URL">📋</button>
+          </div>
         </div>
       </div>
-      <h3 class="tool-title">${tool.name}</h3>
-      <div class="tool-url-sub">${tool.url.replace('https://', '')}</div>
       <p class="tool-description">${tool.short_desc}</p>
       <div class="tool-features-list">${featurePills}</div>
       <div class="tool-card-footer">
@@ -205,16 +339,21 @@ function renderUpcomingRoadmap() {
   if (!upcomingGrid) return;
   upcomingGrid.innerHTML = '';
 
+  if (upcoming.length === 0) {
+    upcomingGrid.innerHTML = '<div style="color:var(--text-muted); font-size:14px;">All roadmap tools have shipped to production!</div>';
+    return;
+  }
+
   upcoming.forEach(tool => {
     const card = document.createElement('div');
     card.className = 'upcoming-card';
     card.innerHTML = `
       <div class="upcoming-card-header">
-        <span class="upcoming-icon">${tool.icon}</span>
+        <div class="upcoming-icon">${tool.icon || '🚀'}</div>
         <span class="launch-badge">${tool.launch_date || 'In Development'}</span>
       </div>
-      <h4 style="font-size:16px; font-weight:700; margin-bottom:6px;">${tool.name}</h4>
-      <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.5; margin-bottom:16px; flex:1;">${tool.short_desc}</p>
+      <h4 style="font-size:17px; font-weight:700; margin-bottom:8px; color:var(--text-primary);">${tool.name}</h4>
+      <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.55; margin-bottom:20px; flex:1;">${tool.short_desc}</p>
       <button class="btn btn-secondary btn-sm w-full" onclick="openNotifyModal('${tool.slug}', '${tool.name}')">
         🔔 Notify Me When Available
       </button>
@@ -227,12 +366,15 @@ function renderUpcomingRoadmap() {
 window.likeTool = async function (slug, btn) {
   try {
     const res = await fetch(`/api/tools/${slug}/like`, { method: 'POST' });
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     if (data.success) {
       btn.querySelector('.like-count').textContent = data.likes;
-      btn.style.color = '#ec4899';
+      btn.classList.add('liked');
+      showToast('Thank you for upvoting!', 'success');
     }
-  } catch (e) {}
+  } catch (e) {
+    showToast('Failed to upvote', 'error');
+  }
 };
 
 // Search Events
@@ -244,6 +386,7 @@ toolSearchInput?.addEventListener('input', () => {
 btnSearchClear?.addEventListener('click', () => {
   toolSearchInput.value = '';
   btnSearchClear.style.display = 'none';
+  toolSearchInput.focus();
   renderCatalog();
 });
 
@@ -252,6 +395,7 @@ document.querySelectorAll('.search-tag').forEach(tag => {
     toolSearchInput.value = tag.dataset.query;
     btnSearchClear.style.display = 'block';
     renderCatalog();
+    toolSearchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 });
 
@@ -292,11 +436,11 @@ formNotifyLaunch?.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, tool_slug })
     });
-    const data = await res.json();
-    alert(data.message || 'Subscribed successfully!');
+    const data = await parseApiResponse(res);
+    showToast(data.message || 'Subscribed successfully!', 'success');
     closeModal('modalNotify');
   } catch (err) {
-    alert('Failed to subscribe: ' + err.message);
+    showToast('Failed to subscribe: ' + err.message, 'error');
   }
 });
 
@@ -316,15 +460,14 @@ formToolRequest?.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, description, use_cases, email })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to submit');
+    const data = await parseApiResponse(res);
 
-    alert('🎉 ' + data.message);
+    showToast(data.message || 'Tool request submitted successfully!', 'success');
     formToolRequest.reset();
     closeModal('modalRequest');
     fetchRequests();
   } catch (err) {
-    alert('Error: ' + err.message);
+    showToast(err.message, 'error');
   }
 });
 
@@ -345,14 +488,13 @@ formBugReport?.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tool_slug, tool_name, title, description, severity, email })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to submit');
+    const data = await parseApiResponse(res);
 
-    alert('🐞 ' + data.message);
+    showToast(data.message || 'Bug report sent! Thank you for helping us improve.', 'success');
     formBugReport.reset();
     closeModal('modalBug');
   } catch (err) {
-    alert('Error: ' + err.message);
+    showToast(err.message, 'error');
   }
 });
 
@@ -371,14 +513,13 @@ formContact?.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, subject, message })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to send message');
+    const data = await parseApiResponse(res);
 
-    alert('✉️ ' + data.message);
+    showToast(data.message || 'Message sent! We will get back to you shortly.', 'success');
     formContact.reset();
     closeModal('modalContact');
   } catch (err) {
-    alert('Error: ' + err.message);
+    showToast(err.message, 'error');
   }
 });
 
@@ -389,12 +530,12 @@ async function fetchRequests() {
   if (!requestsGrid) return;
   try {
     const res = await fetch('/api/requests');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     const requests = data.requests || [];
 
     requestsGrid.innerHTML = '';
     if (requests.length === 0) {
-      requestsGrid.innerHTML = '<div style="color:var(--text-muted); padding:20px;">No community requests yet. Be the first to suggest a tool!</div>';
+      requestsGrid.innerHTML = '<div style="color:var(--text-muted); padding:32px 0;">No community requests yet. Be the first to suggest a tool idea!</div>';
       return;
     }
 
@@ -406,16 +547,16 @@ async function fetchRequests() {
       card.innerHTML = `
         <div class="request-card-header">
           <div>
-            <h4 style="font-size:15px; font-weight:700; margin-bottom:4px;">${req.title}</h4>
+            <h4 style="font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">${req.title}</h4>
             <span class="req-status-badge ${statusClass}">${(req.status || 'pending').replace('_', ' ')}</span>
           </div>
-          <button class="vote-btn" onclick="voteRequest(${req.id}, this)">
+          <button class="vote-btn" onclick="voteRequest(${req.id}, this)" title="Upvote this idea">
             <span>▲</span>
             <span class="vote-count">${req.votes_count || 1}</span>
           </button>
         </div>
-        <p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin-bottom:10px; flex:1;">${req.description}</p>
-        ${req.use_cases ? `<div style="font-size:11.5px; color:var(--text-muted); font-style:italic;">Use cases: ${req.use_cases}</div>` : ''}
+        <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.55; margin-bottom:12px; flex:1;">${req.description}</p>
+        ${req.use_cases ? `<div style="font-size:12px; color:var(--text-muted); border-top:1px solid var(--border-subtle); padding-top:10px;"><strong>Use Cases:</strong> ${req.use_cases}</div>` : ''}
       `;
 
       requestsGrid.appendChild(card);
@@ -426,12 +567,16 @@ async function fetchRequests() {
 window.voteRequest = async function (id, btn) {
   try {
     const res = await fetch(`/api/requests/${id}/vote`, { method: 'POST' });
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     if (data.success) {
       btn.querySelector('.vote-count').textContent = data.votes;
-      btn.style.color = 'var(--accent-blue)';
+      btn.style.color = 'var(--accent)';
+      btn.style.borderColor = 'var(--accent)';
+      showToast('Vote recorded!', 'success');
     }
-  } catch (e) {}
+  } catch (e) {
+    showToast('Failed to vote', 'error');
+  }
 };
 
 // ================= AUTH (LOGIN, REGISTER, PREFERENCES) =================
@@ -459,7 +604,7 @@ tabSignUp?.addEventListener('click', () => {
 async function checkAuthSession() {
   try {
     const res = await fetch('/api/auth/me');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     currentUser = data.user;
     updateAuthHeader();
   } catch (e) {
@@ -494,7 +639,7 @@ function updateAuthHeader() {
     }
   } else {
     authSlot.innerHTML = `
-      <button class="btn btn-primary btn-sm" onclick="openAuthModal()">
+      <button class="btn btn-secondary btn-sm" onclick="openAuthModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         <span>Sign In</span>
       </button>
@@ -514,15 +659,14 @@ formSignIn?.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
+    const data = await parseApiResponse(res);
 
     currentUser = data.user;
     updateAuthHeader();
     closeModal('modalAuth');
-    alert(`Welcome back, ${currentUser.name}!`);
+    showToast(`Welcome back, ${currentUser.name || 'Developer'}!`, 'success');
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 });
 
@@ -539,15 +683,14 @@ formSignUp?.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    const data = await parseApiResponse(res);
 
     currentUser = data.user;
     updateAuthHeader();
     closeModal('modalAuth');
-    alert(`Account created successfully! Welcome, ${currentUser.name}!`);
+    showToast(`Account created! Welcome, ${currentUser.name}!`, 'success');
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 });
 
@@ -557,7 +700,7 @@ window.handleLogout = async function () {
   currentUser = null;
   updateAuthHeader();
   closeModal('modalAccount');
-  alert('Signed out.');
+  showToast('Signed out successfully.', 'info');
 };
 
 // Account Modal
@@ -582,10 +725,11 @@ userNotifyToggle?.addEventListener('change', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notify_new_tools: isEnabled })
     });
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     if (currentUser) currentUser.notify_new_tools = isEnabled ? 1 : 0;
+    showToast(data.message || 'Notification preferences updated', 'success');
   } catch (err) {
-    alert('Failed to update email preferences');
+    showToast('Failed to update email preferences', 'error');
   }
 });
 
@@ -598,50 +742,50 @@ async function loadUserSubmissions() {
       fetch('/api/bugs/mine'),
       fetch('/api/requests/mine')
     ]);
-    const bugsData = await bugsRes.json();
-    const reqsData = await reqsRes.json();
+    const bugsData = await parseApiResponse(bugsRes);
+    const reqsData = await parseApiResponse(reqsRes);
 
     const bugs = bugsData.bugs || [];
     const requests = reqsData.requests || [];
 
     if (bugs.length === 0 && requests.length === 0) {
-      container.innerHTML = '<div style="color:var(--text-muted); font-size:12px; font-style:italic;">You have not submitted any bug reports or requests yet.</div>';
+      container.innerHTML = '<div style="color:var(--text-muted); font-size:12.5px; font-style:italic; padding:12px 0;">You have not submitted any bug reports or requests yet.</div>';
       return;
     }
 
     let html = '';
     requests.forEach(r => {
       html += `
-        <div style="padding:8px; background:var(--bg-surface); border-radius:6px; margin-bottom:6px; font-size:12px;">
-          <div style="display:flex; justify-content:space-between;">
-            <strong>💡 Tool Request: ${r.title}</strong>
+        <div style="padding:10px 12px; background:var(--bg-subtle); border:1px solid var(--border-subtle); border-radius:6px; margin-bottom:8px; font-size:12.5px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>💡 Idea: ${r.title}</strong>
             <span class="req-status-badge status-${r.status}">${r.status}</span>
           </div>
-          <div style="color:var(--text-muted); margin-top:2px;">${r.votes_count || 1} votes</div>
+          <div style="color:var(--text-muted); margin-top:4px;">${r.votes_count || 1} upvotes</div>
         </div>`;
     });
 
     bugs.forEach(b => {
       html += `
-        <div style="padding:8px; background:var(--bg-surface); border-radius:6px; margin-bottom:6px; font-size:12px;">
-          <div style="display:flex; justify-content:space-between;">
+        <div style="padding:10px 12px; background:var(--bg-subtle); border:1px solid var(--border-subtle); border-radius:6px; margin-bottom:8px; font-size:12.5px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
             <strong>🐞 Bug: ${b.title} (${b.tool_name})</strong>
             <span class="req-status-badge status-${b.status}">${b.status}</span>
           </div>
-          <div style="color:var(--text-muted); margin-top:2px;">Severity: ${b.severity}</div>
+          <div style="color:var(--text-muted); margin-top:4px;">Severity: ${b.severity}</div>
         </div>`;
     });
 
     container.innerHTML = html;
   } catch (e) {
-    container.innerHTML = '<div style="color:var(--danger)">Failed to load activity</div>';
+    container.innerHTML = '<div style="color:var(--danger-text)">Failed to load activity</div>';
   }
 }
 
 // ================= ADMIN PORTAL =================
 window.openAdminModal = function () {
   if (!currentUser || currentUser.role !== 'admin') {
-    alert('Administrator access required.');
+    showToast('Administrator access required.', 'error');
     return;
   }
   openModal('modalAdmin');
@@ -670,7 +814,7 @@ document.querySelectorAll('.admin-nav-btn').forEach(btn => {
 async function loadAdminOverview() {
   try {
     const res = await fetch('/api/admin/overview');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     const c = data.counts || {};
     document.getElementById('admToolsCount').textContent = c.tools || 0;
     document.getElementById('admBugsCount').textContent = c.bugs || 0;
@@ -687,7 +831,7 @@ async function loadAdminTools() {
 
   try {
     const res = await fetch('/api/admin/tools');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     const tools = data.tools || [];
 
     tbody.innerHTML = '';
@@ -695,7 +839,7 @@ async function loadAdminTools() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><strong>${t.icon} ${t.name}</strong><br><small style="color:var(--text-muted)">${t.slug}</small></td>
-        <td><a href="${t.url}" target="_blank" style="color:var(--accent-blue)">${t.url.replace('https://', '')}</a></td>
+        <td><a href="${t.url}" target="_blank" style="color:var(--accent)">${t.url.replace('https://', '')}</a></td>
         <td>${t.category}</td>
         <td><span class="tool-badge ${t.is_upcoming ? 'badge-upcoming' : 'badge-live'}">${t.badge}</span></td>
         <td>
@@ -719,16 +863,24 @@ async function loadAdminTools() {
 window.toggleToolVisibility = async function (id) {
   try {
     await fetch(`/api/admin/tools/${id}/toggle-visibility`, { method: 'PATCH' });
+    showToast('Tool visibility toggled', 'success');
     loadAdminTools();
     fetchTools();
-  } catch (e) {}
+  } catch (e) {
+    showToast('Failed to toggle visibility', 'error');
+  }
 };
 
 window.deleteTool = async function (id) {
   if (confirm('Are you sure you want to delete this tool permanently?')) {
-    await fetch(`/api/admin/tools/${id}`, { method: 'DELETE' });
-    loadAdminTools();
-    fetchTools();
+    try {
+      await fetch(`/api/admin/tools/${id}`, { method: 'DELETE' });
+      showToast('Tool deleted', 'info');
+      loadAdminTools();
+      fetchTools();
+    } catch (e) {
+      showToast('Failed to delete tool', 'error');
+    }
   }
 };
 
@@ -802,15 +954,14 @@ formAdminTool?.addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to save tool');
+    const data = await parseApiResponse(res);
 
-    alert(data.message || 'Saved successfully!');
+    showToast(data.message || 'Tool saved successfully!', 'success');
     closeModal('modalToolForm');
     loadAdminTools();
     fetchTools();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 });
 
@@ -821,7 +972,7 @@ async function loadAdminBugs() {
 
   try {
     const res = await fetch('/api/admin/bugs');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     const bugs = data.bugs || [];
 
     tbody.innerHTML = '';
@@ -830,7 +981,7 @@ async function loadAdminBugs() {
       tr.innerHTML = `
         <td><strong>${b.tool_name}</strong></td>
         <td>${b.email}</td>
-        <td><span style="font-weight:700; color:${b.severity === 'critical' ? 'var(--danger)' : 'var(--warning)'}">${b.severity}</span></td>
+        <td><span style="font-weight:700; color:${b.severity === 'critical' ? 'var(--danger-text)' : 'var(--warning-text)'}">${b.severity}</span></td>
         <td>
           <strong>${b.title}</strong>
           <p style="color:var(--text-secondary); margin-top:2px;">${b.description}</p>
@@ -854,18 +1005,27 @@ async function loadAdminBugs() {
 }
 
 window.updateBugStatus = async function (id, status) {
-  await fetch(`/api/admin/bugs/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status })
-  });
-  alert('Bug status updated');
+  try {
+    await fetch(`/api/admin/bugs/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    showToast('Bug status updated', 'success');
+  } catch (e) {
+    showToast('Failed to update status', 'error');
+  }
 };
 
 window.deleteBug = async function (id) {
   if (confirm('Delete this bug report?')) {
-    await fetch(`/api/admin/bugs/${id}`, { method: 'DELETE' });
-    loadAdminBugs();
+    try {
+      await fetch(`/api/admin/bugs/${id}`, { method: 'DELETE' });
+      showToast('Bug report deleted', 'info');
+      loadAdminBugs();
+    } catch (e) {
+      showToast('Failed to delete report', 'error');
+    }
   }
 };
 
@@ -876,7 +1036,7 @@ async function loadAdminRequests() {
 
   try {
     const res = await fetch('/api/admin/requests');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     const reqs = data.requests || [];
 
     tbody.innerHTML = '';
@@ -907,18 +1067,27 @@ async function loadAdminRequests() {
 }
 
 window.updateRequestStatus = async function (id, status) {
-  await fetch(`/api/admin/requests/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status })
-  });
-  alert('Request status updated');
+  try {
+    await fetch(`/api/requests/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    showToast('Request status updated', 'success');
+  } catch (e) {
+    showToast('Failed to update status', 'error');
+  }
 };
 
 window.deleteRequest = async function (id) {
   if (confirm('Delete this request?')) {
-    await fetch(`/api/admin/requests/${id}`, { method: 'DELETE' });
-    loadAdminRequests();
+    try {
+      await fetch(`/api/admin/requests/${id}`, { method: 'DELETE' });
+      showToast('Request deleted', 'info');
+      loadAdminRequests();
+    } catch (e) {
+      showToast('Failed to delete request', 'error');
+    }
   }
 };
 
@@ -929,7 +1098,7 @@ async function loadAdminMessages() {
 
   try {
     const res = await fetch('/api/admin/messages');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     const msgs = data.messages || [];
 
     tbody.innerHTML = '';
@@ -951,8 +1120,13 @@ async function loadAdminMessages() {
 
 window.deleteMessage = async function (id) {
   if (confirm('Delete this message?')) {
-    await fetch(`/api/admin/messages/${id}`, { method: 'DELETE' });
-    loadAdminMessages();
+    try {
+      await fetch(`/api/admin/messages/${id}`, { method: 'DELETE' });
+      showToast('Message deleted', 'info');
+      loadAdminMessages();
+    } catch (e) {
+      showToast('Failed to delete message', 'error');
+    }
   }
 };
 
@@ -963,7 +1137,7 @@ async function loadAdminSubscribers() {
 
   try {
     const res = await fetch('/api/admin/subscribers');
-    const data = await res.json();
+    const data = await parseApiResponse(res);
     const subs = data.subscribers || [];
 
     tbody.innerHTML = '';

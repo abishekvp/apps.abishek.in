@@ -17,10 +17,16 @@ import subscribeRouter from './routes/subscribe.js';
 import authRouter from './routes/auth.js';
 import adminRouter from './routes/admin.js';
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+dotenv.config();
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(__dirname, '.env') });
+}
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(__dirname, '../.env') });
+}
 
 export async function createApp() {
   await initDb();
@@ -52,6 +58,21 @@ export async function createApp() {
   app.use('/api/subscribe', subscribeRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
+
+  // API 404 handler: Any unhandled /api route returns JSON 404
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: `Not found: ${req.method} ${req.originalUrl || req.url}` });
+  });
+
+  // Global Error Handler for API and Express errors
+  app.use((err, req, res, next) => {
+    console.error('[SERVER ERROR]:', err);
+    if (res.headersSent) return next(err);
+    if (req.originalUrl?.startsWith('/api') || req.path?.startsWith('/api')) {
+      return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+    }
+    res.status(500).send('Internal server error');
+  });
 
   // Static Assets from public/
   const publicDir = path.resolve(__dirname, '../public');

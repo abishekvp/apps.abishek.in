@@ -76,6 +76,21 @@ async function runTests() {
     const subData = await subRes.json();
     console.log(`Status: ${subRes.status}, Subscribed: ${subData.message}`);
 
+    // 5b. User Registration Test
+    console.log('\n[TEST 5b] Registering a new user account...');
+    const regRes = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'New Tester',
+        email: `newuser_${Date.now()}@example.com`,
+        password: 'securePassword123'
+      })
+    });
+    const regData = await regRes.json();
+    console.log(`Status: ${regRes.status}, User ID: ${regData.user?.id}, Name: ${regData.user?.name}`);
+    if (regRes.status !== 201 || !regData.user?.id) throw new Error('User registration failed');
+
     // 6. Admin Login
     console.log('\n[TEST 6] Admin authentication test (admin@abishek.in)...');
     const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
@@ -107,7 +122,8 @@ async function runTests() {
     if (prefData.notify_new_tools !== 0) throw new Error('Preferences toggle failed');
 
     // 7. Admin CRUD: Add new tool
-    console.log('\n[TEST 7] Admin creating new tool...');
+    const cronSlug = `cron-${Date.now()}`;
+    console.log(`\n[TEST 7] Admin creating new tool (${cronSlug})...`);
     const addToolRes = await fetch(`${baseUrl}/api/admin/tools`, {
       method: 'POST',
       headers: {
@@ -115,7 +131,7 @@ async function runTests() {
         'Authorization': `Bearer ${adminToken}`
       },
       body: JSON.stringify({
-        slug: 'cron',
+        slug: cronSlug,
         name: 'Cron Generator',
         url: 'https://cron.abishek.in',
         category: 'developer',

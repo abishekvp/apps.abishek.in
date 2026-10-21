@@ -17,20 +17,24 @@ export function verifyPassword(password, hash) {
 }
 
 export async function runMigrations(database) {
+  const isPg = database.dialect === 'pg';
+  const idType = isPg ? 'SERIAL PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+  const tsType = isPg ? 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP' : 'TEXT DEFAULT CURRENT_TIMESTAMP';
+
   // 1. Create Tables
   await database.exec(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${idType},
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       name TEXT NOT NULL,
       role TEXT DEFAULT 'user',
       notify_new_tools INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at ${tsType}
     );
 
     CREATE TABLE IF NOT EXISTS tools (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${idType},
       slug TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
       url TEXT NOT NULL,
@@ -46,12 +50,12 @@ export async function runMigrations(database) {
       launch_date TEXT,
       likes_count INTEGER DEFAULT 0,
       display_order INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at ${tsType},
+      updated_at ${tsType}
     );
 
     CREATE TABLE IF NOT EXISTS tool_requests (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${idType},
       user_id INTEGER,
       email TEXT NOT NULL,
       name TEXT,
@@ -62,12 +66,12 @@ export async function runMigrations(database) {
       votes_count INTEGER DEFAULT 1,
       status TEXT DEFAULT 'pending',
       admin_notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at ${tsType},
+      updated_at ${tsType}
     );
 
     CREATE TABLE IF NOT EXISTS bug_reports (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${idType},
       user_id INTEGER,
       email TEXT NOT NULL,
       tool_slug TEXT NOT NULL,
@@ -79,27 +83,27 @@ export async function runMigrations(database) {
       system_info TEXT,
       status TEXT DEFAULT 'open',
       admin_notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at ${tsType},
+      updated_at ${tsType}
     );
 
     CREATE TABLE IF NOT EXISTS messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${idType},
       user_id INTEGER,
       name TEXT NOT NULL,
       email TEXT NOT NULL,
       subject TEXT NOT NULL,
       message TEXT NOT NULL,
       is_read INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at ${tsType}
     );
 
     CREATE TABLE IF NOT EXISTS launch_subscribers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id ${idType},
       email TEXT NOT NULL,
       tool_slug TEXT DEFAULT 'all',
       is_active INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at ${tsType}
     );
   `);
 

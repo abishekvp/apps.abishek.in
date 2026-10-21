@@ -10,3 +10,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .env*.local
+.env
+*.env
+server/.env
+*.db-wal
+*.db-shm
+.vercel

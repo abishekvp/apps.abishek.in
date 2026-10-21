@@ -4,6 +4,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,8 +45,16 @@ async function createPg(databaseUrl) {
       return res.rows[0] ?? null;
     },
     async run(sql, params = []) {
-      const res = await pool.query(toPgSql(sql), normalizeParams(params));
-      return { changes: res.rowCount ?? 0, lastInsertRowid: res.rows[0]?.id };
+      let pgSql = toPgSql(sql);
+      if (/^\s*INSERT\s+INTO/i.test(pgSql) && !/RETURNING/i.test(pgSql)) {
+        pgSql += ' RETURNING id';
+      }
+      const res = await pool.query(pgSql, normalizeParams(params));
+      const rowId = res.rows[0]?.id;
+      return {
+        changes: res.rowCount ?? 0,
+        lastInsertRowid: rowId !== undefined ? Number(rowId) : undefined
+      };
     },
     async exec(sql) {
       await pool.query(sql);
@@ -55,14 +64,47 @@ async function createPg(databaseUrl) {
 
 async function createSqlite() {
   const { DatabaseSync } = await import('node:sqlite');
-  const dataDir = path.resolve(__dirname, '../../data');
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
-  const dbPath = path.join(dataDir, 'apps.db');
+  let dbPath;
+  if (isServerless) {
+    const tmpDir = os.tmpdir();
+    dbPath = path.join(tmpDir, 'apps.db');
+
+    // On serverless environments (e.g. Vercel), /var/task is read-only.
+    // If /tmp/apps.db does not exist yet, copy the pre-seeded apps.db if available.
+    if (!fs.existsSync(dbPath)) {
+      const seedCandidates = [
+        path.resolve(__dirname, '../../data/apps.db'),
+        path.resolve(process.cwd(), 'data/apps.db'),
+        '/var/task/data/apps.db'
+      ];
+      for (const candidate of seedCandidates) {
+        if (fs.existsSync(candidate)) {
+          try {
+            fs.copyFileSync(candidate, dbPath);
+            console.log(`[DB] Copied seed SQLite database from ${candidate} to ${dbPath}`);
+            break;
+          } catch (e) {
+            console.warn(`[DB] Failed copying ${candidate} to ${dbPath}:`, e.message);
+          }
+        }
+      }
+    }
+  } else {
+    const dataDir = path.resolve(__dirname, '../../data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    dbPath = path.join(dataDir, 'apps.db');
+  }
+
   const rawDb = new DatabaseSync(dbPath);
 
-  // Enable WAL mode for high concurrency
-  rawDb.exec('PRAGMA journal_mode = WAL;');
+  // Enable WAL mode for high concurrency where supported
+  try {
+    rawDb.exec('PRAGMA journal_mode = WAL;');
+  } catch (e) {
+    console.warn('[DB] WAL mode not enabled:', e.message);
+  }
   rawDb.exec('PRAGMA foreign_keys = ON;');
 
   return {
