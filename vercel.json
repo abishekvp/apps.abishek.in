@@ -13,11 +13,11 @@
     },
     {
       "source": "/admin",
-      "destination": "/public/admin.html"
+      "destination": "/admin.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "/public/$1"
+      "source": "/admin/",
+      "destination": "/admin.html"
     }
   ]
 }

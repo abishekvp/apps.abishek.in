@@ -80,7 +80,17 @@ export default function Header({ onOpenRequest, onOpenBug, onOpenContact, onOpen
           {currentUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {currentUser.role === 'admin' && (
-                <a href="/admin" className="btn btn-sm btn-admin">
+                <a
+                  href="/admin"
+                  className="btn btn-sm btn-admin"
+                  onClick={(e) => {
+                    if (onOpenAdmin) {
+                      e.preventDefault();
+                      onOpenAdmin();
+                    }
+                  }}
+                  title="Admin Portal"
+                >
                   <Settings size={13} />
                   <span>Admin</span>
                 </a>

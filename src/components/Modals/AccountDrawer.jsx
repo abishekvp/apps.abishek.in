@@ -3,7 +3,7 @@ import { X, User, Mail, Bell, Shield, LogOut, CheckCircle2, Clock, AlertTriangle
 import { useAuth } from '../../context/AuthContext';
 import { getInitials } from '../../utils/icons';
 
-export default function AccountDrawer({ isOpen, onClose }) {
+export default function AccountDrawer({ isOpen, onClose, onOpenAdmin }) {
   const { currentUser, logout, updatePreferences } = useAuth();
   const [bugs, setBugs] = useState([]);
   const [loadingBugs, setLoadingBugs] = useState(false);
@@ -92,6 +92,23 @@ export default function AccountDrawer({ isOpen, onClose }) {
                 >
                   {currentUser.role === 'admin' ? 'Admin Access' : 'Verified Member'}
                 </span>
+                {currentUser.role === 'admin' && (
+                  <a
+                    href="/admin"
+                    onClick={(e) => {
+                      if (onOpenAdmin) {
+                        e.preventDefault();
+                        onClose();
+                        onOpenAdmin();
+                      }
+                    }}
+                    className="btn btn-sm btn-admin"
+                    style={{ padding: '3px 8px', fontSize: '11px', textDecoration: 'none' }}
+                  >
+                    <Shield size={12} />
+                    <span>Admin Portal</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>

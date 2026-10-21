@@ -12,6 +12,7 @@ import ContactModal from './components/Modals/ContactModal';
 import NotifyModal from './components/Modals/NotifyModal';
 import AuthModal from './components/Modals/AuthModal';
 import AccountDrawer from './components/Modals/AccountDrawer';
+import AdminPortalModal from './components/Modals/AdminPortalModal';
 
 import { useToast } from './context/ToastContext';
 
@@ -36,6 +37,7 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState('signin');
   const [accountDrawerOpen, setAccountDrawerOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
 
   // Fetch initial tools and community requests
   const fetchTools = async () => {
@@ -183,6 +185,7 @@ export default function App() {
           setAuthModalOpen(true);
         }}
         onOpenAccount={() => setAccountDrawerOpen(true)}
+        onOpenAdmin={() => setAdminModalOpen(true)}
       />
 
       <main className="hub-main">
@@ -261,6 +264,13 @@ export default function App() {
       <AccountDrawer
         isOpen={accountDrawerOpen}
         onClose={() => setAccountDrawerOpen(false)}
+        onOpenAdmin={() => setAdminModalOpen(true)}
+      />
+
+      <AdminPortalModal
+        isOpen={adminModalOpen}
+        onClose={() => setAdminModalOpen(false)}
+        onToolsChanged={fetchTools}
       />
     </div>
   );

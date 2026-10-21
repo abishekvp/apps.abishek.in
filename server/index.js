@@ -86,7 +86,9 @@ export async function createApp() {
 
   // Admin Portal Route: Dedicated separate administration page
   app.get(['/admin', '/admin.html'], (req, res) => {
-    const adminPath = path.join(publicDir, 'admin.html');
+    const adminPath = fs.existsSync(path.join(distDir, 'admin.html'))
+      ? path.join(distDir, 'admin.html')
+      : path.join(publicDir, 'admin.html');
     if (fs.existsSync(adminPath)) {
       return res.sendFile(adminPath);
     }
