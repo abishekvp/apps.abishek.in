@@ -1,0 +1,18 @@
+{
+  "name": "apps-directory-hub",
+  "version": "1.0.0",
+  "description": "Showcase Directory and Central Hub for all abishek.in tools and applications with user login, bug reporting, tool requests, notification management, and admin portal.",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "pg": "^8.16.0"
+  }
+}

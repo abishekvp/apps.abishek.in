@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abishek Apps & Tools — Central Showcase & Developer Hub | apps.abishek.in & tools.abishek.in</title>
+  <meta name="description" content="Official central hub and tools showcase for abishek.in: Base64 Studio, Web Compiler, JSON Master, Markdown Studio, Prettier Formatter, Image Compressor, PDF Toolkit, YouTube Downloader. Request new tools, report bugs, and get notified on upcoming launches.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Header -->
+  <header class="hub-header">
+    <div class="header-container">
+      <div class="header-left">
+        <a href="/" class="hub-brand">
+          <div class="hub-brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+          </div>
+          <div class="hub-brand-meta">
+            <span class="hub-brand-title">Abishek<span class="text-accent">Tools</span></span>
+            <span class="hub-subdomain" id="subdomainPill">apps.abishek.in · tools.abishek.in</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Nav Buttons -->
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-sm" id="btnOpenRequestModal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Request Tool</span>
+        </button>
+
+        <button class="btn btn-secondary btn-sm" id="btnOpenBugModal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"></path></svg>
+          <span>Report Bug</span>
+        </button>
+
+        <button class="btn btn-secondary btn-sm" id="btnOpenContactModal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <span>Support</span>
+        </button>
+
+        <!-- Auth State Slot -->
+        <div class="auth-slot" id="authSlot">
+          <button class="btn btn-primary btn-sm" id="btnOpenAuthModal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Sign In</span>
+          </button>
+        </div>
+
+        <button class="icon-btn" id="themeToggle" title="Toggle Theme">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-pill">
+        <span>⚡ High Performance Client-Side & Server Tools</span>
+      </div>
+      <h1 class="hero-heading">
+        Every Developer & Productivity Tool<br>
+        <span class="gradient-text">In One Fast, Private Ecosystem</span>
+      </h1>
+      <p class="hero-subtitle">
+        Explore professional fullscreen web applications designed for power users. Zero clutter, privacy-focused, zero-cost, and accessible directly via subdomains.
+      </p>
+
+      <!-- Smart Context Search Bar -->
+      <div class="search-container">
+        <div class="search-input-box">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="toolSearchInput" placeholder="Search by name or context (e.g. 'encode base64', 'format json', 'markdown diagrams', 'run js', 'compress webp')...">
+          <button class="search-clear-btn" id="btnSearchClear" style="display:none;">✕</button>
+        </div>
+
+        <div class="search-tags-row">
+          <span class="search-tag-label">Popular queries:</span>
+          <button class="search-tag" data-query="base64">base64</button>
+          <button class="search-tag" data-query="json">format json</button>
+          <button class="search-tag" data-query="compiler">code compiler</button>
+          <button class="search-tag" data-query="markdown">markdown diagrams</button>
+          <button class="search-tag" data-query="prettier">prettier code</button>
+          <button class="search-tag" data-query="image">compress image</button>
+          <button class="search-tag" data-query="pdf">pdf merge</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter Category Tabs -->
+  <section class="catalog-section">
+    <div class="section-container">
+      <div class="catalog-nav-bar">
+        <div class="category-tabs" id="categoryTabs">
+          <button class="cat-btn active" data-category="all">All Tools (<span id="countAll">0</span>)</button>
+          <button class="cat-btn" data-category="developer">Developer (<span id="countDev">0</span>)</button>
+          <button class="cat-btn" data-category="formatters">Formatters & Converters (<span id="countFormatters">0</span>)</button>
+          <button class="cat-btn" data-category="media">Media & Documents (<span id="countMedia">0</span>)</button>
+          <button class="cat-btn" data-category="upcoming">🚀 Upcoming (<span id="countUpcoming">0</span>)</button>
+        </div>
+
+        <div class="catalog-sort">
+          <label>Sort by:</label>
+          <select id="sortSelect" class="select-input">
+            <option value="featured">Featured Order</option>
+            <option value="popular">Most Popular</option>
+            <option value="name">Name (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tools Grid -->
+      <div class="tools-grid" id="toolsGrid">
+        <!-- Rendered dynamically via JavaScript -->
+        <div class="grid-loading">Loading tools library from database...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Upcoming Tools Feature Section -->
+  <section class="upcoming-section" id="upcomingSection">
+    <div class="section-container">
+      <div class="section-header">
+        <div>
+          <span class="section-badge">Roadmap</span>
+          <h2 class="section-title">Upcoming Tools & Early Access</h2>
+          <p class="section-desc">Be the first to know when new tools launch. Click "Notify Me" to receive an email alert upon release.</p>
+        </div>
+      </div>
+
+      <div class="upcoming-grid" id="upcomingGrid">
+        <!-- Upcoming tools rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Community Requests & Feedback Board -->
+  <section class="requests-board-section">
+    <div class="section-container">
+      <div class="board-header">
+        <div>
+          <span class="section-badge">Community Ideas</span>
+          <h2 class="section-title">Tool Requests & Feature Backlog</h2>
+          <p class="section-desc">Upvote community requests or submit your own idea for a new developer tool.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openRequestModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Submit New Tool Idea</span>
+        </button>
+      </div>
+
+      <div class="requests-grid" id="requestsGrid">
+        <!-- Requests rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="hub-footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="hub-brand">
+          <div class="hub-brand-icon">⚡</div>
+          <span class="hub-brand-title">Abishek Tools</span>
+        </div>
+        <p class="footer-text">
+          Free, private, fullscreen web utilities for developers, designers, and creators worldwide. Built by Abishek V.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-heading">Developer Tools</h4>
+        <ul class="footer-links">
+          <li><a href="https://compiler.abishek.in" target="_blank">Web Compiler Studio</a></li>
+          <li><a href="https://prettier.abishek.in" target="_blank">Prettier Code Formatter</a></li>
+          <li><a href="https://md.abishek.in" target="_blank">Markdown Studio Pro</a></li>
+          <li><a href="https://base64.abishek.in" target="_blank">Base64 Studio</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-heading">Data & Media</h4>
+        <ul class="footer-links">
+          <li><a href="https://json.abishek.in" target="_blank">JSON Master Suite</a></li>
+          <li><a href="https://image.abishek.in" target="_blank">Image Compressor Pro</a></li>
+          <li><a href="https://pdf.abishek.in" target="_blank">PDF Toolkit</a></li>
+          <li><a href="https://youtube.abishek.in" target="_blank">YouTube Downloader</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-heading">Connect & Contribute</h4>
+        <ul class="footer-links">
+          <li><a href="javascript:void(0)" onclick="openRequestModal()">Request New Tool</a></li>
+          <li><a href="javascript:void(0)" onclick="openBugModal()">Report a Bug</a></li>
+          <li><a href="javascript:void(0)" onclick="openContactModal()">Contact Developer</a></li>
+          <li><a href="https://abishek.in" target="_blank">Abishek's Portfolio</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Abishek V · Hosted across apps.abishek.in & tools.abishek.in</span>
+    </div>
+  </footer>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- MODAL: REQUEST NEW TOOL -->
+  <div class="modal-overlay" id="modalRequest">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Request a New Tool</h3>
+        <button class="modal-close" onclick="closeModal('modalRequest')">✕</button>
+      </div>
+      <form id="formToolRequest">
+        <div class="modal-body">
+          <p class="modal-desc">Have a tool idea you want to see built on the platform? Tell us about it:</p>
+
+          <div class="form-group">
+            <label>Tool Idea / Name <span class="required">*</span></label>
+            <input type="text" id="reqTitle" class="form-input" placeholder="e.g. Cron Expression Generator, Har to Curl Converter" required>
+          </div>
+
+          <div class="form-group">
+            <label>Description & Purpose <span class="required">*</span></label>
+            <textarea id="reqDesc" class="form-textarea" placeholder="Explain what the tool should do and why it is useful..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Key Features & Use Cases</label>
+            <textarea id="reqUseCases" class="form-textarea" placeholder="e.g. Needs to support syntax highlighting, export to JSON..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Your Email Address <span class="required">*</span></label>
+            <input type="email" id="reqEmail" class="form-input" placeholder="you@example.com (we'll notify you when it's built)" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalRequest')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitRequest">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REPORT BUG -->
+  <div class="modal-overlay" id="modalBug">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Report a Bug or Issue</h3>
+        <button class="modal-close" onclick="closeModal('modalBug')">✕</button>
+      </div>
+      <form id="formBugReport">
+        <div class="modal-body">
+          <p class="modal-desc">Found a bug or unexpected behavior in any of our tools? Let us know so we can fix it promptly:</p>
+
+          <div class="form-group">
+            <label>Which tool has the bug? <span class="required">*</span></label>
+            <select id="bugToolSelect" class="form-input" required>
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Bug Summary <span class="required">*</span></label>
+            <input type="text" id="bugTitle" class="form-input" placeholder="e.g. Large image crashes when converting to AVIF" required>
+          </div>
+
+          <div class="form-group">
+            <label>Detailed Description & Steps to Reproduce <span class="required">*</span></label>
+            <textarea id="bugDesc" class="form-textarea" placeholder="1. Uploaded a 12MB PNG&#10;2. Clicked convert&#10;3. Page showed an error..." required></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Severity</label>
+              <select id="bugSeverity" class="form-input">
+                <option value="low">Low (Minor cosmetic issue)</option>
+                <option value="medium" selected>Medium (Feature behaves incorrectly)</option>
+                <option value="high">High (Tool crashes or breaks)</option>
+                <option value="critical">Critical (Data loss or security)</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label>Your Email <span class="required">*</span></label>
+              <input type="email" id="bugEmail" class="form-input" placeholder="you@example.com" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalBug')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitBug">Send Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CONTACT / SUPPORT -->
+  <div class="modal-overlay" id="modalContact">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Contact & Support</h3>
+        <button class="modal-close" onclick="closeModal('modalContact')">✕</button>
+      </div>
+      <form id="formContact">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Your Name</label>
+            <input type="text" id="contactName" class="form-input" placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label>Your Email <span class="required">*</span></label>
+            <input type="email" id="contactEmail" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Subject <span class="required">*</span></label>
+            <input type="text" id="contactSubject" class="form-input" placeholder="Inquiry regarding tools platform..." required>
+          </div>
+          <div class="form-group">
+            <label>Message <span class="required">*</span></label>
+            <textarea id="contactMessage" class="form-textarea" placeholder="How can we assist you?" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalContact')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NOTIFY ON LAUNCH -->
+  <div class="modal-overlay" id="modalNotify">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Notify Me on Launch</h3>
+        <button class="modal-close" onclick="closeModal('modalNotify')">✕</button>
+      </div>
+      <form id="formNotifyLaunch">
+        <input type="hidden" id="notifyToolSlug">
+        <div class="modal-body">
+          <p class="modal-desc" id="notifyToolDesc">Get notified as soon as this tool goes live!</p>
+          <div class="form-group">
+            <label>Email Address <span class="required">*</span></label>
+            <input type="email" id="notifyEmail" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <p class="hint-text">We will never spam you. You can turn off update notifications at any time in your profile.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalNotify')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Notify Me</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTH (LOGIN & REGISTER) -->
+  <div class="modal-overlay" id="modalAuth">
+    <div class="modal-card modal-auth-card">
+      <div class="modal-header">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab-btn active" id="tabSignIn">Sign In</button>
+          <button type="button" class="auth-tab-btn" id="tabSignUp">Create Account</button>
+        </div>
+        <button class="modal-close" onclick="closeModal('modalAuth')">✕</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="formSignIn" class="auth-form-body">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+          </div>
+          <div class="auth-demo-hint">
+            <strong>Admin Login Hint:</strong> Email: <code>admin@abishek.in</code> · Password: <code>admin</code>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-full" id="btnSubmitLogin">Sign In</button>
+        </div>
+      </form>
+
+      <!-- Sign Up Form -->
+      <form id="formSignUp" class="auth-form-body" style="display:none;">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" class="form-input" placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="regEmail" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password (min 4 characters)</label>
+            <input type="password" id="regPassword" class="form-input" placeholder="••••••••" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-full" id="btnSubmitRegister">Create Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- USER ACCOUNT & PREFERENCES DRAWER -->
+  <div class="modal-overlay" id="modalAccount">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">My Account & Preferences</h3>
+        <button class="modal-close" onclick="closeModal('modalAccount')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="account-profile-box">
+          <div class="account-avatar" id="accountAvatar">U</div>
+          <div>
+            <h4 id="accountName" style="font-weight:700;">User Name</h4>
+            <span id="accountEmail" style="color:var(--text-muted); font-size:12px;">user@example.com</span>
+            <div id="accountRoleBadge" class="badge" style="display:inline-block; margin-top:4px;">USER</div>
+          </div>
+        </div>
+
+        <!-- Notification Toggle Section -->
+        <div class="preference-box">
+          <div class="pref-text">
+            <strong>Product Updates & New Tools Emails</strong>
+            <p>Receive notifications when brand new tools and major features launch.</p>
+          </div>
+          <label class="toggle-checkbox">
+            <input type="checkbox" id="userNotifyToggle" checked>
+            <span class="toggle-switch"></span>
+          </label>
+        </div>
+
+        <!-- My Submissions -->
+        <div class="account-submissions">
+          <h4 style="font-size:13px; font-weight:600; margin-bottom:10px;">My Requests & Bug Reports</h4>
+          <div id="userActivityList" class="user-activity-list">
+            <div style="color:var(--text-muted); font-size:12px; font-style:italic;">Loading activity...</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="handleLogout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN PORTAL MODAL / DASHBOARD -->
+  <div class="modal-overlay modal-wide-overlay" id="modalAdmin">
+    <div class="modal-card modal-admin-card">
+      <div class="modal-header">
+        <div class="admin-header-title">
+          <span class="admin-badge">ADMIN PORTAL</span>
+          <h3 class="modal-title">Tools & Reports Management</h3>
+        </div>
+        <button class="modal-close" onclick="closeModal('modalAdmin')">✕</button>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="admin-nav-bar">
+        <button class="admin-nav-btn active" data-atab="tools">Manage Tools (<span id="admToolsCount">0</span>)</button>
+        <button class="admin-nav-btn" data-atab="bugs">Bug Reports (<span id="admBugsCount">0</span>)</button>
+        <button class="admin-nav-btn" data-atab="requests">Tool Requests (<span id="admRequestsCount">0</span>)</button>
+        <button class="admin-nav-btn" data-atab="messages">Support Messages (<span id="admMessagesCount">0</span>)</button>
+        <button class="admin-nav-btn" data-atab="subscribers">Subscribers (<span id="admSubscribersCount">0</span>)</button>
+      </div>
+
+      <div class="modal-body admin-modal-body">
+        <!-- ADMIN TAB 1: TOOLS CRUD -->
+        <div class="admin-tab-pane active" id="atab-tools">
+          <div class="admin-pane-header">
+            <h4>Live & Upcoming Tools in Database</h4>
+            <button class="btn btn-primary btn-sm" onclick="openAddToolModal()">+ Add New Tool</button>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Tool</th>
+                  <th>Subdomain / URL</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Visibility</th>
+                  <th>Likes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admToolsTableBody">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN TAB 2: BUG REPORTS -->
+        <div class="admin-tab-pane" id="atab-bugs">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Tool</th>
+                  <th>Reporter</th>
+                  <th>Severity</th>
+                  <th>Summary & Steps</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admBugsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN TAB 3: TOOL REQUESTS -->
+        <div class="admin-tab-pane" id="atab-requests">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Requested Idea</th>
+                  <th>Description & Use Cases</th>
+                  <th>Requester</th>
+                  <th>Votes</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admRequestsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN TAB 4: MESSAGES -->
+        <div class="admin-tab-pane" id="atab-messages">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Sender</th>
+                  <th>Subject</th>
+                  <th>Message</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admMessagesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN TAB 5: SUBSCRIBERS -->
+        <div class="admin-tab-pane" id="atab-subscribers">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Subscribed Tool</th>
+                  <th>Subscribed On</th>
+                </tr>
+              </thead>
+              <tbody id="admSubscribersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN SUB-MODAL: ADD / EDIT TOOL -->
+  <div class="modal-overlay" id="modalToolForm">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="toolFormTitle">Add New Tool to Directory</h3>
+        <button class="modal-close" onclick="closeModal('modalToolForm')">✕</button>
+      </div>
+      <form id="formAdminTool">
+        <input type="hidden" id="adminToolId">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Tool Name <span class="required">*</span></label>
+              <input type="text" id="admToolName" class="form-input" placeholder="e.g. Regex Studio" required>
+            </div>
+            <div class="form-group flex-1">
+              <label>Slug (Subdomain) <span class="required">*</span></label>
+              <input type="text" id="admToolSlug" class="form-input" placeholder="e.g. regex" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Live URL <span class="required">*</span></label>
+              <input type="url" id="admToolUrl" class="form-input" placeholder="https://regex.abishek.in" required>
+            </div>
+            <div class="form-group" style="width:90px;">
+              <label>Icon (Emoji)</label>
+              <input type="text" id="admToolIcon" class="form-input" placeholder="🎯" value="🔧">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Category</label>
+              <select id="admToolCategory" class="form-input">
+                <option value="developer">Developer</option>
+                <option value="formatters">Formatters & Converters</option>
+                <option value="media">Media & Documents</option>
+                <option value="utilities">Utilities</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label>Badge</label>
+              <select id="admToolBadge" class="form-input">
+                <option value="Live">Live</option>
+                <option value="Beta">Beta</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="New">New</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Short Description (Summary) <span class="required">*</span></label>
+            <input type="text" id="admToolShortDesc" class="form-input" placeholder="Single sentence highlighting the tool" required>
+          </div>
+
+          <div class="form-group">
+            <label>Long Description</label>
+            <textarea id="admToolLongDesc" class="form-textarea" placeholder="Detailed multi-sentence explanation..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Key Features (comma-separated)</label>
+            <input type="text" id="admToolFeatures" class="form-input" placeholder="Live execution, KaTeX math, Mermaid diagrams">
+          </div>
+
+          <div class="form-group">
+            <label>Search Tags (comma-separated)</label>
+            <input type="text" id="admToolTags" class="form-input" placeholder="regex, tester, javascript, patterns">
+          </div>
+
+          <div class="form-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="admToolIsUpcoming">
+              <span>Is Upcoming (Mark as in-progress roadmap item)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="admToolIsHidden">
+              <span>Hide from Public Showcase</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modalToolForm')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveAdminTool">Save Tool</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
